@@ -33,5 +33,6 @@
 
 pub mod error;
 pub mod omics;
+pub mod outcome;
 pub mod phenotype;
 pub mod sample;
