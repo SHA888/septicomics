@@ -16,8 +16,20 @@
 //! This crate is licensed **Apache-2.0** so nodes and third parties can depend on
 //! the contract without copyleft friction (see `LICENSING.md`).
 //!
-//! The module surface is built up across Phase 1 (see `Plans.md`). This root file
-//! currently establishes the crate, its lints, and the doctest gate.
+//! ## Example
+//!
+//! ```
+//! use septicomics_cdm::omics::{Abundance, FeatureId, OmicsLayer};
+//!
+//! let layer = OmicsLayer::from_wire("proteomics")?;
+//! assert_eq!(layer, OmicsLayer::Proteomics);
+//!
+//! let feature = FeatureId::new("P12345")?;
+//! let value = Abundance::new(8.21)?;
+//! assert_eq!(feature.as_str(), "P12345");
+//! assert_eq!(value.get(), 8.21);
+//! # Ok::<(), septicomics_cdm::error::CdmError>(())
+//! ```
 
-// The empty-crate scaffold (task 1.1). Subsequent tasks add the omics, sample,
-// phenotype, outcome, parsing, and versioning modules.
+pub mod error;
+pub mod omics;
