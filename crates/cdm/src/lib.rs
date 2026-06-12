@@ -32,6 +32,7 @@
 //! ```
 
 pub mod error;
+mod macros;
 pub mod omics;
 pub mod outcome;
 pub mod parse;

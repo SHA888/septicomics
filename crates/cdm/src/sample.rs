@@ -6,122 +6,31 @@
 //! temporal, so the schema models trajectories directly rather than treating time
 //! as a loose attribute.
 
-use core::fmt;
-
 use crate::error::{CdmError, Result};
+use crate::macros::{id_newtype, wire_enum};
 use crate::omics::OmicsLayer;
 
-/// Identifier for a study subject (patient). Newtype over a non-empty string.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct SubjectId(String);
-
-impl SubjectId {
-    /// Construct a subject id, rejecting empty / whitespace-only input.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`CdmError::EmptyIdentifier`] if the trimmed input is empty.
-    pub fn new(value: impl Into<String>) -> Result<Self> {
-        let value = value.into();
-        if value.trim().is_empty() {
-            return Err(CdmError::EmptyIdentifier { field: "SubjectId" });
-        }
-        Ok(SubjectId(value))
-    }
-
-    /// Borrow the identifier as a string slice.
-    #[must_use]
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
+id_newtype! {
+    /// Identifier for a study subject (patient). Newtype over a non-empty string.
+    pub struct SubjectId;
 }
 
-impl fmt::Display for SubjectId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
+id_newtype! {
+    /// Identifier for a biological sample. Newtype over a non-empty string.
+    pub struct SampleId;
 }
 
-/// Identifier for a biological sample. Newtype over a non-empty string.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct SampleId(String);
-
-impl SampleId {
-    /// Construct a sample id, rejecting empty / whitespace-only input.
+wire_enum! {
+    /// The clinical reference event a [`Timepoint`] is measured relative to.
     ///
-    /// # Errors
-    ///
-    /// Returns [`CdmError::EmptyIdentifier`] if the trimmed input is empty.
-    pub fn new(value: impl Into<String>) -> Result<Self> {
-        let value = value.into();
-        if value.trim().is_empty() {
-            return Err(CdmError::EmptyIdentifier { field: "SampleId" });
-        }
-        Ok(SampleId(value))
-    }
-
-    /// Borrow the identifier as a string slice.
-    #[must_use]
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl fmt::Display for SampleId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-/// The clinical reference event a [`Timepoint`] is measured relative to.
-///
-/// Not `#[non_exhaustive]`: adding an anchor is a breaking CDM change (major bump).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum TimeAnchor {
-    /// ICU (or hospital) admission.
-    IcuAdmission,
-    /// Recognized onset of sepsis.
-    SepsisOnset,
-    /// Study enrollment.
-    Enrollment,
-}
-
-impl TimeAnchor {
-    /// Every anchor defined by this CDM version, in declaration order.
-    pub const ALL: [TimeAnchor; 3] = [
-        TimeAnchor::IcuAdmission,
-        TimeAnchor::SepsisOnset,
-        TimeAnchor::Enrollment,
-    ];
-
-    /// The stable, machine-readable identifier for this anchor.
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            TimeAnchor::IcuAdmission => "icu_admission",
-            TimeAnchor::SepsisOnset => "sepsis_onset",
-            TimeAnchor::Enrollment => "enrollment",
-        }
-    }
-
-    /// Parse a wire identifier (as produced by [`TimeAnchor::as_str`]).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`CdmError::UnknownVariant`] if `value` matches no known anchor.
-    pub fn from_wire(value: &str) -> Result<Self> {
-        TimeAnchor::ALL
-            .into_iter()
-            .find(|anchor| anchor.as_str() == value)
-            .ok_or_else(|| CdmError::UnknownVariant {
-                kind: "TimeAnchor",
-                value: value.to_owned(),
-            })
-    }
-}
-
-impl fmt::Display for TimeAnchor {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.as_str())
+    /// Not `#[non_exhaustive]`: adding an anchor is a breaking CDM change (major bump).
+    pub enum TimeAnchor {
+        /// ICU (or hospital) admission.
+        IcuAdmission => "icu_admission",
+        /// Recognized onset of sepsis.
+        SepsisOnset => "sepsis_onset",
+        /// Study enrollment.
+        Enrollment => "enrollment",
     }
 }
 
@@ -346,7 +255,7 @@ mod tests {
 
     #[test]
     fn anchor_roundtrips_through_wire() {
-        for anchor in TimeAnchor::ALL {
+        for &anchor in TimeAnchor::ALL {
             assert_eq!(TimeAnchor::from_wire(anchor.as_str()), Ok(anchor));
         }
         assert!(TimeAnchor::from_wire("nonsense").is_err());

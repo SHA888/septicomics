@@ -8,6 +8,7 @@
 use core::fmt;
 
 use crate::error::{CdmError, Result};
+use crate::macros::wire_enum;
 
 /// A duration in **days**. Newtype over a finite, non-negative `f64`.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -43,46 +44,13 @@ impl fmt::Display for Days {
     }
 }
 
-/// Vital status at an assessment horizon.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum VitalStatus {
-    /// The subject was alive at the assessment horizon.
-    Alive,
-    /// The subject had died by the assessment horizon.
-    Dead,
-}
-
-impl VitalStatus {
-    /// Every status defined by this CDM version, in declaration order.
-    pub const ALL: [VitalStatus; 2] = [VitalStatus::Alive, VitalStatus::Dead];
-
-    /// The stable, machine-readable identifier.
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            VitalStatus::Alive => "alive",
-            VitalStatus::Dead => "dead",
-        }
-    }
-
-    /// Parse a wire identifier (as produced by [`VitalStatus::as_str`]).
-    ///
-    /// # Errors
-    ///
-    /// Returns [`CdmError::UnknownVariant`] if `value` matches no known status.
-    pub fn from_wire(value: &str) -> Result<Self> {
-        VitalStatus::ALL
-            .into_iter()
-            .find(|s| s.as_str() == value)
-            .ok_or_else(|| CdmError::UnknownVariant {
-                kind: "VitalStatus",
-                value: value.to_owned(),
-            })
-    }
-}
-
-impl fmt::Display for VitalStatus {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.as_str())
+wire_enum! {
+    /// Vital status at an assessment horizon.
+    pub enum VitalStatus {
+        /// The subject was alive at the assessment horizon.
+        Alive => "alive",
+        /// The subject had died by the assessment horizon.
+        Dead => "dead",
     }
 }
 
@@ -170,7 +138,7 @@ mod tests {
 
     #[test]
     fn vital_status_roundtrips() {
-        for s in VitalStatus::ALL {
+        for &s in VitalStatus::ALL {
             assert_eq!(VitalStatus::from_wire(s.as_str()), Ok(s));
         }
         assert!(VitalStatus::from_wire("unknown").is_err());
