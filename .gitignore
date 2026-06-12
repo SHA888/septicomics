@@ -1,0 +1,45 @@
+# Rust (cargo)
+/target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Python (uv)
+.venv/
+.env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.pytype/
+.ruff_cache/
+uv.lock  # pinned by design, DO NOT ignore; this is intentional
+
+# TypeScript (pnpm)
+node_modules/
+dist/
+build/
+.pnpm-store/
+pnpm-lock.yaml  # pinned by design, DO NOT ignore; this is intentional
+npm-debug.log*
+yarn-error.log*
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.env.local
+.env.*.local
+
+# Project-specific
+.harness-mem/
+.claude/
+*.output
+session-log.md  # session-specific, not part of the design narrative
