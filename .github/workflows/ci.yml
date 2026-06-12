@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cdm:
+    name: cdm — fmt · clippy · test · doctest · semver
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tags needed for the semver baseline
+
+      - name: Install Rust (stable + rustfmt + clippy)
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt clippy
+          rustup default stable
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+
+      # Phase 1 CI gate (TODO.md): the disciplines that fail the build when violated.
+      - name: Format check
+        run: cargo fmt --all --check
+
+      - name: Clippy (deny warnings — also promotes missing_docs to an error)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Test
+        run: cargo test --all-features
+
+      - name: Doctests
+        run: cargo test --doc --all-features
+
+      - name: Install cargo-semver-checks
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-semver-checks
+
+      - name: SemVer check (cdm)
+        run: |
+          if git describe --tags --abbrev=0 >/dev/null 2>&1; then
+            BASE="$(git describe --tags --abbrev=0)"
+            echo "Comparing septicomics-cdm against baseline tag: $BASE"
+            cargo semver-checks check-release --package septicomics-cdm --baseline-rev "$BASE"
+          else
+            echo "::notice::No release tag yet — semver baseline check is wired but skipped until the first tag (see docs/cdm-versioning.md)."
+          fi
