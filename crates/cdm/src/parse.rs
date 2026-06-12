@@ -13,10 +13,25 @@ use crate::sample::{HoursFromAnchor, Sample, SampleId, SubjectId, TimeAnchor, Ti
 
 /// Parse a decimal scalar, attributing failures to a named field.
 fn parse_f64(raw: &str, field: &'static str) -> Result<f64> {
-    raw.trim().parse::<f64>().map_err(|_| CdmError::Malformed {
+    let trimmed = raw.trim();
+    trimmed.parse::<f64>().map_err(|_| CdmError::Malformed {
+        // Report the value actually parsed (trimmed), not the surrounding whitespace.
         field,
-        value: raw.to_owned(),
+        value: trimmed.to_owned(),
     })
+}
+
+/// Re-attribute a field-bearing [`CdmError`] to the raw column it came from, so a
+/// failure reports the boundary column name (e.g. `"hours_from_anchor"`) rather than
+/// the internal type name (e.g. `"HoursFromAnchor"`). Variants without a `field`
+/// (e.g. `UnknownVariant`, which already carries `kind`) pass through unchanged.
+fn at_field(err: CdmError, field: &'static str) -> CdmError {
+    match err {
+        CdmError::EmptyIdentifier { .. } => CdmError::EmptyIdentifier { field },
+        CdmError::NonFiniteQuantity { .. } => CdmError::NonFiniteQuantity { field },
+        CdmError::OutOfRange { .. } => CdmError::OutOfRange { field },
+        other => other,
+    }
 }
 
 /// An untyped sample row as it arrives at the node boundary.
@@ -44,11 +59,13 @@ impl RawSample {
     /// Returns the first [`CdmError`] encountered: empty ids, an unknown anchor or
     /// layer, or a malformed/non-finite hours value.
     pub fn parse(&self) -> Result<Sample> {
-        let sample_id = SampleId::new(self.sample_id.as_str())?;
-        let subject_id = SubjectId::new(self.subject_id.as_str())?;
+        let sample_id =
+            SampleId::new(self.sample_id.as_str()).map_err(|e| at_field(e, "sample_id"))?;
+        let subject_id =
+            SubjectId::new(self.subject_id.as_str()).map_err(|e| at_field(e, "subject_id"))?;
         let anchor = TimeAnchor::from_wire(&self.anchor)?;
-        let offset =
-            HoursFromAnchor::new(parse_f64(&self.hours_from_anchor, "hours_from_anchor")?)?;
+        let offset = HoursFromAnchor::new(parse_f64(&self.hours_from_anchor, "hours_from_anchor")?)
+            .map_err(|e| at_field(e, "hours_from_anchor"))?;
         let layer = OmicsLayer::from_wire(&self.omics_layer)?;
         Ok(Sample::new(
             sample_id,
@@ -75,7 +92,8 @@ impl RawMortality {
     ///
     /// Returns a [`CdmError`] for a malformed/negative horizon or an unknown status.
     pub fn parse(&self) -> Result<MortalityOutcome> {
-        let horizon = Days::new(parse_f64(&self.horizon_days, "horizon_days")?)?;
+        let horizon = Days::new(parse_f64(&self.horizon_days, "horizon_days")?)
+            .map_err(|e| at_field(e, "horizon_days"))?;
         let status = VitalStatus::from_wire(&self.vital_status)?;
         Ok(MortalityOutcome::new(horizon, status))
     }
@@ -173,16 +191,19 @@ mod tests {
     }
 
     #[test]
-    fn rejects_non_finite_hours() {
-        // "inf" parses as a float but is not a finite quantity.
+    fn rejects_non_finite_hours_with_column_field() {
+        // "inf" parses as a float but is not a finite quantity; the error must name
+        // the raw column ("hours_from_anchor"), not the internal type.
         let raw = RawSample {
             hours_from_anchor: "inf".to_owned(),
             ..good_raw_sample()
         };
-        assert!(matches!(
+        assert_eq!(
             raw.parse(),
-            Err(CdmError::NonFiniteQuantity { .. })
-        ));
+            Err(CdmError::NonFiniteQuantity {
+                field: "hours_from_anchor"
+            })
+        );
     }
 
     #[test]
@@ -199,7 +220,12 @@ mod tests {
             horizon_days: "-5".to_owned(),
             vital_status: "alive".to_owned(),
         };
-        assert!(matches!(negative.parse(), Err(CdmError::OutOfRange { .. })));
+        assert_eq!(
+            negative.parse(),
+            Err(CdmError::OutOfRange {
+                field: "horizon_days"
+            })
+        );
 
         let bad_status = RawMortality {
             horizon_days: "28".to_owned(),

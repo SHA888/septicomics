@@ -10,7 +10,11 @@
 use core::fmt;
 
 /// A semantic version of the CDM schema (`major.minor.patch`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+///
+/// Intentionally **not** `Ord`/`PartialOrd`: a lexicographic order would not match
+/// the type's only meaningful relation — [`SchemaVersion::is_compatible_with`] — so
+/// exposing `<`/`>=` would invite using ordering as a stand-in for compatibility.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SchemaVersion {
     /// Breaking schema changes. A bump here is a coordinated node-upgrade event.
     pub major: u32,
@@ -31,20 +35,35 @@ impl SchemaVersion {
         }
     }
 
-    /// Whether `self` is wire-compatible with `other` — i.e. their majors match.
+    /// Whether `self` is wire-compatible with `other`.
+    ///
+    /// At `>= 1.0`, compatibility is **major-match** (additive minors are safe). While
+    /// either side is **pre-1.0** (`major == 0`), every release may break per SemVer,
+    /// so compatibility requires an **exact** version match. This mirrors
+    /// `docs/cdm-versioning.md` and prevents declaring two divergent `0.x` schemas
+    /// compatible.
     ///
     /// ```
     /// use septicomics_cdm::version::SchemaVersion;
     ///
+    /// // >= 1.0: same major is compatible, different major is not.
     /// let a = SchemaVersion::new(1, 2, 0);
-    /// let b = SchemaVersion::new(1, 5, 3);
-    /// let c = SchemaVersion::new(2, 0, 0);
-    /// assert!(a.is_compatible_with(b));
-    /// assert!(!a.is_compatible_with(c));
+    /// assert!(a.is_compatible_with(SchemaVersion::new(1, 5, 3)));
+    /// assert!(!a.is_compatible_with(SchemaVersion::new(2, 0, 0)));
+    ///
+    /// // pre-1.0: only an exact match is compatible.
+    /// let z = SchemaVersion::new(0, 1, 0);
+    /// assert!(z.is_compatible_with(SchemaVersion::new(0, 1, 0)));
+    /// assert!(!z.is_compatible_with(SchemaVersion::new(0, 2, 0)));
     /// ```
     #[must_use]
     pub const fn is_compatible_with(self, other: SchemaVersion) -> bool {
-        self.major == other.major
+        if self.major == 0 || other.major == 0 {
+            // Pre-1.0: every release may break, so require an exact match.
+            self.major == other.major && self.minor == other.minor && self.patch == other.patch
+        } else {
+            self.major == other.major
+        }
     }
 }
 
@@ -65,15 +84,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn compatibility_is_by_major() {
-        assert!(CDM_SCHEMA_VERSION.is_compatible_with(SchemaVersion::new(0, 9, 9)));
+    fn pre_1_0_requires_exact_match() {
+        // CDM_SCHEMA_VERSION is 0.1.0; during 0.x only an exact match is compatible.
+        assert!(CDM_SCHEMA_VERSION.is_compatible_with(SchemaVersion::new(0, 1, 0)));
+        assert!(!CDM_SCHEMA_VERSION.is_compatible_with(SchemaVersion::new(0, 9, 9)));
         assert!(!CDM_SCHEMA_VERSION.is_compatible_with(SchemaVersion::new(1, 0, 0)));
     }
 
     #[test]
+    fn post_1_0_is_major_match() {
+        let v = SchemaVersion::new(1, 2, 0);
+        assert!(v.is_compatible_with(SchemaVersion::new(1, 9, 5)));
+        assert!(!v.is_compatible_with(SchemaVersion::new(2, 0, 0)));
+        // A pre-1.0 peer is never compatible with a stable one.
+        assert!(!v.is_compatible_with(SchemaVersion::new(0, 9, 0)));
+    }
+
+    #[test]
     fn schema_version_tracks_crate_version() {
-        // Drift guard: the embedded schema version must equal the crate's SemVer.
-        assert_eq!(CDM_SCHEMA_VERSION.to_string(), env!("CARGO_PKG_VERSION"));
+        // Drift guard on the numeric components, robust to any pre-release/build
+        // suffix on the crate version (which SchemaVersion does not model).
+        let major: u32 = env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap();
+        let minor: u32 = env!("CARGO_PKG_VERSION_MINOR").parse().unwrap();
+        let patch: u32 = env!("CARGO_PKG_VERSION_PATCH").parse().unwrap();
+        assert_eq!(CDM_SCHEMA_VERSION, SchemaVersion::new(major, minor, patch));
     }
 
     #[test]

@@ -19,21 +19,24 @@ The CDM version is `major.minor.patch`:
 
 ## The compatibility rule (what nodes negotiate on)
 
-> Two CDM schema versions are **wire-compatible iff their `major` components match.**
+> At `>= 1.0`, two CDM schema versions are **wire-compatible iff their `major`
+> components match.** While either side is **pre-1.0** (`major == 0`), compatibility
+> requires an **exact** version match.
 
 This is implemented by `SchemaVersion::is_compatible_with` and enforced at
-fan-out: a node advertises the CDM major it speaks, and the orchestrator **refuses**
-to dispatch a plan to a node whose major differs, rather than guessing
-(`ARCHITECTURE.md` §6). Minor/patch differences within the same major are always
-compatible.
+fan-out: a node advertises the CDM version it speaks, and the orchestrator **refuses**
+to dispatch a plan to an incompatible node rather than guessing (`ARCHITECTURE.md`
+§6). At `>= 1.0`, minor/patch differences within the same major are always compatible.
 
 ## Pre-1.0 caveat
 
 While `major == 0`, the schema is explicitly **unstable**: per SemVer, any `0.x`
-release may break. During this phase the federation is expected to run a single,
-pinned `0.x` and upgrade in lockstep; the major-match rule still holds (all `0.x`
-share major `0`), but do **not** rely on cross-`0.x` stability. The first
-`1.0.0` of `septicomics-cdm` is the point at which the compatibility guarantee
+release may break. Because of that, `is_compatible_with` does **not** apply the
+major-match rule during `0.x` — it requires an exact `major.minor.patch` match, so
+two divergent `0.x` schemas are correctly reported as incompatible (a `0.1` node and
+a `0.9` node will not be told they can interoperate). During this phase the federation
+is expected to run a single, pinned `0.x` and upgrade in lockstep. The first `1.0.0`
+of `septicomics-cdm` is the point at which the major-match compatibility guarantee
 becomes load-bearing (see `TODO.md` Phase 9).
 
 ## Enforcement (the gate, not a wish)

@@ -266,11 +266,15 @@ impl Trajectory {
                 });
             }
         }
+        // Sort by offset, then break ties on sample id so the ordering is fully
+        // deterministic regardless of input order (two nodes parsing the same data
+        // in a different row order must produce identical trajectories).
         samples.sort_by(|a, b| {
             a.timepoint()
                 .offset()
                 .get()
                 .total_cmp(&b.timepoint().offset().get())
+                .then_with(|| a.id().as_str().cmp(b.id().as_str()))
         });
         Ok(Trajectory {
             subject,
@@ -363,6 +367,25 @@ mod tests {
         assert_eq!(order, ["A", "B", "C"]);
         assert_eq!(traj.len(), 3);
         assert!(!traj.is_empty());
+    }
+
+    #[test]
+    fn trajectory_breaks_offset_ties_deterministically() {
+        // Same offset, supplied in two different input orders → identical result,
+        // ordered by sample id.
+        let forward = Trajectory::new(
+            SubjectId::new("S1").unwrap(),
+            vec![sample_at("S1", "B", 24.0), sample_at("S1", "A", 24.0)],
+        )
+        .unwrap();
+        let reversed = Trajectory::new(
+            SubjectId::new("S1").unwrap(),
+            vec![sample_at("S1", "A", 24.0), sample_at("S1", "B", 24.0)],
+        )
+        .unwrap();
+        let ids: Vec<&str> = forward.samples().iter().map(|s| s.id().as_str()).collect();
+        assert_eq!(ids, ["A", "B"]);
+        assert_eq!(forward, reversed);
     }
 
     #[test]

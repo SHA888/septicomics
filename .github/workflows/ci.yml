@@ -36,14 +36,16 @@ jobs:
       - name: Format check
         run: cargo fmt --all --check
 
+      # --locked enforces the committed Cargo.lock, so CI fails if resolution drifts
+      # (the reason .gitignore tracks the lockfile: pinned, reproducible builds).
       - name: Clippy (deny warnings — also promotes missing_docs to an error)
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --locked --all-targets --all-features -- -D warnings
 
       - name: Test
-        run: cargo test --all-features
+        run: cargo test --locked --all-features
 
       - name: Doctests
-        run: cargo test --doc --all-features
+        run: cargo test --locked --doc --all-features
 
       - name: Install cargo-semver-checks
         uses: taiki-e/install-action@v2
@@ -52,10 +54,13 @@ jobs:
 
       - name: SemVer check (cdm)
         run: |
-          if git describe --tags --abbrev=0 >/dev/null 2>&1; then
-            BASE="$(git describe --tags --abbrev=0)"
+          # Baseline must be a septicomics-cdm-scoped tag (convention:
+          # `septicomics-cdm-v<semver>`); a workspace-global `git describe` would
+          # pick another crate's tag and check the wrong baseline.
+          BASE="$(git tag --list 'septicomics-cdm-v*' --sort=-version:refname | head -n1)"
+          if [ -n "$BASE" ]; then
             echo "Comparing septicomics-cdm against baseline tag: $BASE"
             cargo semver-checks check-release --package septicomics-cdm --baseline-rev "$BASE"
           else
-            echo "::notice::No release tag yet — semver baseline check is wired but skipped until the first tag (see docs/cdm-versioning.md)."
+            echo "::notice::No septicomics-cdm release tag yet — semver baseline check is wired but skipped until the first tag (see docs/cdm-versioning.md)."
           fi
