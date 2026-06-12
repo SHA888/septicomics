@@ -41,5 +41,6 @@ yarn-error.log*
 # Project-specific
 .harness-mem/
 .claude/
+out/
 *.output
 session-log.md  # session-specific, not part of the design narrative
