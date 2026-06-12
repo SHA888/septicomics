@@ -1,8 +1,9 @@
 # Rust (cargo)
 /target/
-Cargo.lock
 **/*.rs.bk
 *.pdb
+# NOTE: Cargo.lock is committed by design — the workspace ships binaries
+# (orchestrator, node-agent) and the project mandates pinned, reproducible builds.
 
 # Python (uv)
 .venv/

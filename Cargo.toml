@@ -1,0 +1,26 @@
+# septicomics Cargo workspace.
+#
+# Library-first, crate-per-concern. Directories use short concern names; crates
+# publish under the `septicomics-` prefix (see LICENSING.md and ARCHITECTURE.md §5).
+#
+# Per-crate licensing is intentional and NOT inherited from the workspace: the
+# node-facing crates are Apache-2.0 while the orchestrator/web services are
+# AGPL-3.0-or-later (see LICENSING.md). Each crate declares its own `license`.
+
+[workspace]
+resolver = "2"
+members = ["crates/cdm"]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.96"
+repository = "https://github.com/septicomics/septicomics"
+authors = ["The septicomics contributors"]
+
+# Discipline gates applied workspace-wide (see TODO.md Phase 1 CI gate).
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }

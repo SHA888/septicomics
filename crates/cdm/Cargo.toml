@@ -1,0 +1,16 @@
+[package]
+name = "septicomics-cdm"
+description = "septicomics Common Data Model: the sepsis multi-omics schema and boundary parsers every federation node must speak. The load-bearing, SemVer-critical contract."
+version = "0.1.0"
+license = "Apache-2.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+authors.workspace = true
+keywords = ["sepsis", "multi-omics", "federation", "schema"]
+categories = ["science", "data-structures"]
+
+[lints]
+workspace = true
+
+[dependencies]
