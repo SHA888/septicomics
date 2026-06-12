@@ -24,19 +24,23 @@ Legend: `[ ]` todo · `[~]` blocked · ⛔ hard blocker.
 - [x] Write `SECURITY.md` and the disclosure/coordinated-vuln policy — done, with a
       dedicated *disclosure-control bypass* critical tier.
 
-## Phase 1 — Common Data Model (`cdm` crate)
+## Phase 1 — Common Data Model (`cdm` crate) — ✅ COMPLETE
 
-- [ ] Define omics-layer types (transcriptomics, proteomics, single-cell, …) as
-      newtypes; no bare `String`/`f64` for domain quantities.
-- [ ] Define sample / subject / timepoint structure (temporal trajectories are
-      first-class, not an afterthought).
-- [ ] Define inflammatory-endotype and clinical-phenotype enums (exhaustive `match`).
-- [ ] Define outcome types (mortality, organ-failure, …) with explicit units.
-- [ ] Implement boundary parsers (parse-don't-validate): raw input → CDM value or
-      typed error; no half-validated states constructible.
-- [ ] Write the CDM versioning policy and embed a machine-readable schema version.
-- [ ] CI gate: `cargo fmt --check`, `clippy -D warnings`, `cargo-semver-checks`,
+- [x] Define omics-layer types (transcriptomics, proteomics, single-cell, …) as
+      newtypes; no bare `String`/`f64` for domain quantities. (`omics.rs`)
+- [x] Define sample / subject / timepoint structure (temporal trajectories are
+      first-class, not an afterthought). (`sample.rs`)
+- [x] Define inflammatory-endotype and clinical-phenotype enums (exhaustive `match`).
+      (`phenotype.rs`)
+- [x] Define outcome types (mortality, organ-failure, …) with explicit units.
+      (`outcome.rs`)
+- [x] Implement boundary parsers (parse-don't-validate): raw input → CDM value or
+      typed error; no half-validated states constructible. (`parse.rs`)
+- [x] Write the CDM versioning policy and embed a machine-readable schema version.
+      (`version.rs`, `docs/cdm-versioning.md`)
+- [x] CI gate: `cargo fmt --check`, `clippy -D warnings`, `cargo-semver-checks`,
       doctests; `cargo install cargo-skill` wired into the dev bootstrap.
+      (`.github/workflows/ci.yml`, `scripts/dev-bootstrap.sh`)
 
 ## Phase 2 — Federation protocol (`fed-protocol` crate)
 
