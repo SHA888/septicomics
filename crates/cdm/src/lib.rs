@@ -33,4 +33,5 @@
 
 pub mod error;
 pub mod omics;
+pub mod phenotype;
 pub mod sample;
