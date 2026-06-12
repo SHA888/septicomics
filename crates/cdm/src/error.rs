@@ -37,6 +37,13 @@ pub enum CdmError {
         /// What was inconsistent, for diagnostics (e.g. `"trajectory mixed anchors"`).
         context: &'static str,
     },
+    /// A scalar field could not be parsed into its target type.
+    Malformed {
+        /// The field that failed to parse (e.g. `"hours_from_anchor"`).
+        field: &'static str,
+        /// The raw value that could not be parsed.
+        value: String,
+    },
 }
 
 impl fmt::Display for CdmError {
@@ -56,6 +63,9 @@ impl fmt::Display for CdmError {
             }
             CdmError::Inconsistent { context } => {
                 write!(f, "inconsistent value: {context}")
+            }
+            CdmError::Malformed { field, value } => {
+                write!(f, "field `{field}` has malformed value `{value}`")
             }
         }
     }
