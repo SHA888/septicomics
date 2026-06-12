@@ -33,3 +33,4 @@
 
 pub mod error;
 pub mod omics;
+pub mod sample;

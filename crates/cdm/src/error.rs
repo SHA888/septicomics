@@ -32,6 +32,11 @@ pub enum CdmError {
         /// The unrecognized input value.
         value: String,
     },
+    /// A composite value violated an internal consistency rule.
+    Inconsistent {
+        /// What was inconsistent, for diagnostics (e.g. `"trajectory mixed anchors"`).
+        context: &'static str,
+    },
 }
 
 impl fmt::Display for CdmError {
@@ -48,6 +53,9 @@ impl fmt::Display for CdmError {
             }
             CdmError::UnknownVariant { kind, value } => {
                 write!(f, "`{value}` is not a valid {kind}")
+            }
+            CdmError::Inconsistent { context } => {
+                write!(f, "inconsistent value: {context}")
             }
         }
     }
