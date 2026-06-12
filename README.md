@@ -111,27 +111,37 @@ Naming convention under the locked name:
 - TypeScript (pnpm) workspace: scoped `@septicomics/*` (e.g. `@septicomics/web`).
 - GitHub: org/repo handle `septicomics`.
 
-## Licensing — DECIDE BEFORE ANY CODE
+## Licensing — DECIDED (see `LICENSING.md`)
 
-No source is written until this is settled. Proposed split, for discussion:
+The Phase 0 licensing blocker is **resolved**. The repository is multi-licensed by
+component, in two tiers plus content:
 
-- **Service code** (orchestrator, node agent, web app): **AGPL-3.0** — a hosted
-  federation is a network service; AGPL keeps modified deployments reciprocal and
-  discourages closed forks of the federation itself.
-- **CDM schema + client SDK**: **Apache-2.0** — maximize adoption; nodes and third
-  parties must be able to depend on the contract without copyleft friction.
+- **Permissive (Apache-2.0)** — everything an institution installs inside its sovereign
+  boundary: the **node agent**, the in-node Python compute, and the contract crates it
+  links (`cdm`, `fed-protocol`, `disclosure-guard`). Maximizes node adoption with no
+  copyleft friction at the trust boundary institutions actually vet.
+- **Reciprocal (AGPL-3.0-or-later)** — the centrally/publicly operated network services:
+  the **orchestrator** and the **web portal**. Keeps the federation hub and public plane
+  reciprocal where closed-SaaS-fork risk actually lives.
 - **Curated derived catalog content** (signatures, summary stats): **CC-BY-4.0** —
   data is not code; attribution-only matches the open-knowledge intent.
 
-Open questions to resolve first: (1) does AGPL on the orchestrator deter the very
-institutions you want as nodes? (2) is a contributor agreement / DCO required?
-(3) who is the data-governance custodian — this is a consortium decision, not a
-repository setting.
+This refines the original draft by moving the **node agent to Apache-2.0** (it draft-read
+as AGPL), resolving the deterrence concern below. Full decision and rationale:
+`LICENSING.md`.
+
+Resolved open questions: (1) AGPL no longer deters nodes — node-facing software is
+Apache-2.0. (2) Contributor model is **DCO**, not CLA — see `CONTRIBUTING.md`.
+(3) Data-governance custodian model is decided (multi-stakeholder steering committee);
+appointments pending consortium ratification — see `GOVERNANCE.md`.
 
 ## Status
 
-Scaffold only. Architecture in `ARCHITECTURE.md`, work breakdown in `TODO.md`.
-First code task (CDM crate) is blocked on the LICENSE decision above.
+Scaffold + governance. Architecture in `ARCHITECTURE.md`, work breakdown in `TODO.md`,
+licensing in `LICENSING.md`, governance in `GOVERNANCE.md` / `CONTRIBUTING.md` /
+`SECURITY.md`. **Phase 0 (governance & licensing) is complete**; the `cdm` crate
+(Phase 1) is now unblocked. The remaining live blocker is node onboarding (the
+cross-cohort capability is latent until ≥2 nodes federate).
 
 **Maturity caveat.** The pooled cross-cohort capability is latent until at least
 two nodes federate. Before that, `septicomics` is functionally a SeptiSearch: the

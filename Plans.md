@@ -6,23 +6,23 @@ Atomic implementation phases. Tracked in sync with `TODO.md`.
 
 ---
 
-## Phase 0 — Governance & licensing ⛔ HARD BLOCKER
+## Phase 0 — Governance & licensing ✅ COMPLETE
 
-**Status:** cc:blocked
+**Status:** cc:done
 
-All subsequent phases blocked until Phase 0 completes.
+Blocker cleared — Phase 1 is now unblocked.
 
-- [ ] **Decide LICENSE split** (AGPL-3.0 service / Apache-2.0 CDM+SDK / CC-BY-4.0 catalog)
-- [ ] Decide contributor model (DCO vs CLA); record in `CONTRIBUTING.md`
-- [ ] Name data-governance custodian and node-onboarding authority
-- [ ] Draft node data-sharing agreement template and consent-scope vocabulary
-- [ ] Write `SECURITY.md` and disclosure/coordinated-vulnerability policy
+- [x] **Decide LICENSE split** — two-tier: Apache-2.0 (node agent, CDM, fed-protocol, guard, Python compute) / AGPL-3.0-or-later (orchestrator, web portal) / CC-BY-4.0 (catalog). See `LICENSING.md`
+- [x] Decide contributor model — **DCO** (not CLA); recorded in `CONTRIBUTING.md`
+- [x] Name data-governance custodian & node-onboarding authority — model in `GOVERNANCE.md`; appointments TBD at consortium ratification
+- [x] Draft node data-sharing agreement template and consent-scope vocabulary — `docs/governance/`
+- [x] Write `SECURITY.md` and disclosure/coordinated-vulnerability policy
 
 ---
 
 ## Phase 1 — Common Data Model (`cdm` crate)
 
-**Status:** cc:todo (blocked by Phase 0)
+**Status:** cc:todo (unblocked — next up)
 
 The load-bearing contract. Every node speaks the same sepsis schema.
 
@@ -163,9 +163,9 @@ A principle without a gate is decoration.
 
 ## Summary
 
-- **cc:blocked** (1 phase) — Phase 0 (licensing decision required)
-- **cc:todo** (8 phases) — Phases 1-9 (awaiting Phase 0)
+- **cc:done** (1 phase) — Phase 0 (governance & licensing complete)
+- **cc:todo** (8 phases) — Phases 1-9 (Phase 1 unblocked, next up)
 - **cc:wip** (0 phases)
-- **cc:done** (0 phases)
+- **cc:blocked** (0 phases)
 
-For detailed context and rationale, see `TODO.md`.
+For detailed context and rationale, see `TODO.md`, `LICENSING.md`, `GOVERNANCE.md`.

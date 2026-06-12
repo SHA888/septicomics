@@ -9,15 +9,20 @@ Legend: `[ ]` todo · `[~]` blocked · ⛔ hard blocker.
 
 ---
 
-## Phase 0 — Governance & licensing (blocks all code)
+## Phase 0 — Governance & licensing (blocks all code) — ✅ COMPLETE
 
-- [ ] ⛔ Decide LICENSE split (AGPL-3.0 service / Apache-2.0 CDM+SDK / CC-BY-4.0
-      catalog) — see `README.md`. **No source until resolved.**
-- [ ] Decide contributor model (DCO vs CLA) and record in `CONTRIBUTING.md`.
-- [ ] Name the data-governance custodian and the node-onboarding authority
-      (consortium decision, not a repo setting).
-- [ ] Draft the node data-sharing agreement template and consent-scope vocabulary.
-- [ ] Write `SECURITY.md` and the disclosure/coordinated-vuln policy.
+- [x] Decide LICENSE split — **decided**: two-tier (Apache-2.0 for node-facing software
+      incl. node agent + CDM/protocol/guard; AGPL-3.0-or-later for orchestrator + web
+      portal; CC-BY-4.0 catalog). See `LICENSING.md` and root `LICENSE-*` files.
+- [x] Decide contributor model (DCO vs CLA) — **DCO**; recorded in `CONTRIBUTING.md`.
+- [x] Name the data-governance custodian and the node-onboarding authority — **model
+      decided** (multi-stakeholder steering committee) in `GOVERNANCE.md`; named
+      appointments `[TBD: consortium ratification]` (filled at node onboarding).
+- [x] Draft the node data-sharing agreement template and consent-scope vocabulary —
+      `docs/governance/NODE_DATA_SHARING_AGREEMENT.md`,
+      `docs/governance/CONSENT_SCOPE_VOCABULARY.md`.
+- [x] Write `SECURITY.md` and the disclosure/coordinated-vuln policy — done, with a
+      dedicated *disclosure-control bypass* critical tier.
 
 ## Phase 1 — Common Data Model (`cdm` crate)
 
