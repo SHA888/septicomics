@@ -92,7 +92,7 @@ jobs:
         run: cargo test --locked --all-features -p septicomics-fedproto
 
       - name: Property tests (no-record-encoding invariant)
-        run: cargo test --locked --test '*' -p septicomics-fedproto --lib property_tests -- --nocapture
+        run: cargo test --locked --lib property_tests -p septicomics-fedproto -- --nocapture
 
       - name: Install cargo-semver-checks
         uses: taiki-e/install-action@v2
