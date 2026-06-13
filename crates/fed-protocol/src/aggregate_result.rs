@@ -459,4 +459,131 @@ mod tests {
         let _km = KaplanMeierResult::new(500, 150, 2.5, 0.01, None).unwrap();
         let _ep = EndotypePrevalenceResult::new(1000, 250).unwrap();
     }
+
+    #[test]
+    fn serde_bypass_kaplan_meier_events_exceed_subjects() {
+        // VULNERABILITY: serde's default Deserialize bypasses validation.
+        // This test documents that invalid JSON can be deserialized directly
+        // without calling new(), bypassing invariant checks.
+        //
+        // The invariant "total_events ≤ total_subjects" is enforced in new(),
+        // but derive(Deserialize) does not call new(). This allows construction
+        // of invalid states from untrusted JSON.
+        //
+        // Fix: Implement custom Deserialize that calls new() instead of directly
+        // constructing the struct.
+
+        let invalid_json = r#"{
+            "total_subjects": 100,
+            "total_events": 200,
+            "log_rank_statistic": 2.5,
+            "log_rank_pvalue": 0.01,
+            "median_survival": null
+        }"#;
+
+        // This should fail validation but currently succeeds
+        let result: Result<KaplanMeierResult, _> = serde_json::from_str(invalid_json);
+        match result {
+            Ok(km) => {
+                // VULNERABILITY CONFIRMED: We constructed an invalid state
+                assert_eq!(km.total_subjects, 100);
+                assert_eq!(km.total_events, 200);
+                // This would never happen via new(), which enforces: total_events ≤ total_subjects
+                panic!(
+                    "VULNERABILITY: Deserialized invalid KaplanMeierResult without validation: \
+                     total_events={} > total_subjects={}",
+                    km.total_events, km.total_subjects
+                );
+            }
+            Err(_) => {
+                // If we get here, the vulnerability has been fixed with custom Deserialize
+            }
+        }
+    }
+
+    #[test]
+    fn serde_bypass_endotype_prevalence_zero_cohort() {
+        // VULNERABILITY: serde's default Deserialize bypasses validation.
+        // The invariant "cohort_size > 0" is enforced in new(), but
+        // derive(Deserialize) does not call new().
+
+        let invalid_json = r#"{
+            "cohort_size": 0,
+            "endotype_count": 0
+        }"#;
+
+        let result: Result<EndotypePrevalenceResult, _> = serde_json::from_str(invalid_json);
+        match result {
+            Ok(ep) => {
+                // VULNERABILITY CONFIRMED
+                panic!(
+                    "VULNERABILITY: Deserialized invalid EndotypePrevalenceResult: \
+                     cohort_size={} (must be > 0)",
+                    ep.cohort_size
+                );
+            }
+            Err(_) => {
+                // If we get here, the vulnerability has been fixed
+            }
+        }
+    }
+
+    #[test]
+    fn serde_bypass_differential_expression_features_significant_exceeds_tested() {
+        // VULNERABILITY: serde's default Deserialize bypasses validation.
+        // The invariant "features_significant ≤ features_tested" is enforced in new(),
+        // but derive(Deserialize) does not call new().
+
+        let invalid_json = r#"{
+            "features_tested": 100,
+            "features_significant": 101,
+            "mean_log2_fold_change": 1.5,
+            "fdr_threshold": 0.05
+        }"#;
+
+        let result: Result<DifferentialExpressionResult, _> = serde_json::from_str(invalid_json);
+        match result {
+            Ok(de) => {
+                // VULNERABILITY CONFIRMED
+                panic!(
+                    "VULNERABILITY: Deserialized invalid DifferentialExpressionResult: \
+                     features_significant={} > features_tested={}",
+                    de.features_significant, de.features_tested
+                );
+            }
+            Err(_) => {
+                // If we get here, the vulnerability has been fixed
+            }
+        }
+    }
+
+    #[test]
+    fn serde_bypass_kaplan_meier_invalid_pvalue() {
+        // VULNERABILITY: serde's default Deserialize bypasses validation.
+        // The invariant "log_rank_pvalue in [0, 1]" is enforced in new(),
+        // but derive(Deserialize) does not call new().
+
+        let invalid_json = r#"{
+            "total_subjects": 100,
+            "total_events": 50,
+            "log_rank_statistic": 2.5,
+            "log_rank_pvalue": 1.5,
+            "median_survival": null
+        }"#;
+
+        let result: Result<KaplanMeierResult, _> = serde_json::from_str(invalid_json);
+        match result {
+            Ok(km) => {
+                // VULNERABILITY CONFIRMED
+                panic!(
+                    "VULNERABILITY: Deserialized invalid KaplanMeierResult: \
+                     log_rank_pvalue={} (must be in [0, 1])",
+                    km.log_rank_pvalue
+                );
+            }
+            Err(_) => {
+                // If we get here, the vulnerability has been fixed
+            }
+        }
+    }
 }
