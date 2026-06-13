@@ -4,4 +4,10 @@
 /// Analysis plan types and invariants.
 pub mod analysis_plan;
 
+/// Aggregate result types: computed statistics only, never raw subject data.
+pub mod aggregate_result;
+
+pub use aggregate_result::{
+    AggregateError, DifferentialExpressionResult, EndotypePrevalenceResult, KaplanMeierResult,
+};
 pub use analysis_plan::{AnalysisError, AnalysisPlan, CohortSelector, EstimatorVariant};
