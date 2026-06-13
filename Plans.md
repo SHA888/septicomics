@@ -46,7 +46,7 @@ The load-bearing contract every node must speak. SemVer-critical. Apache-2.0.
 | 2.2 | Aggregate-result type; subject-level value unrepresentable on wire | no constructor yields exportable record; property test | 2.1 | cc:done [cf14012] |
 | 2.3 | Node-capability advertisement (CDM/protocol major, consent scopes) | type + serde round-trip test | 1.7 | cc:done [847c7bb] |
 | 2.4 | Version-negotiation (orchestrator refuses incompatible majors) | unit tests for accept/refuse | 2.3 | cc:done |
-| 2.5 | CI gate (Phase 2): no-record-encoding property test + semver | property test + `cargo-semver-checks` in CI | 2.2, 2.4 | cc:todo |
+| 2.5 | CI gate (Phase 2): no-record-encoding property test + semver | property test + `cargo-semver-checks` in CI | 2.2, 2.4 | cc:done |
 
 ---
 

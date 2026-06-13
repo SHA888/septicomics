@@ -13,6 +13,9 @@ pub mod node_capability;
 /// Version negotiation: orchestrator compatibility checking against node capabilities.
 pub mod version_negotiation;
 
+#[cfg(test)]
+mod property_tests;
+
 pub use aggregate_result::{
     AggregateError, DifferentialExpressionResult, EndotypePrevalenceResult, KaplanMeierResult,
 };

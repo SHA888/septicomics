@@ -64,3 +64,47 @@ jobs:
           else
             echo "::notice::No septicomics-cdm release tag yet — semver baseline check is wired but skipped until the first tag (see docs/cdm-versioning.md)."
           fi
+
+  fed-protocol:
+    name: fed-protocol — fmt · clippy · test · property-tests · semver
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tags needed for the semver baseline
+
+      - name: Install Rust (stable + rustfmt + clippy)
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt clippy
+          rustup default stable
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+
+      # Phase 2 CI gate: version negotiation + no-record-encoding property test + semver
+      - name: Format check
+        run: cargo fmt --all --check
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --locked --all-targets --all-features -p septicomics-fedproto -- -D warnings
+
+      - name: Test
+        run: cargo test --locked --all-features -p septicomics-fedproto
+
+      - name: Property tests (no-record-encoding invariant)
+        run: cargo test --locked --test '*' -p septicomics-fedproto --lib property_tests -- --nocapture
+
+      - name: Install cargo-semver-checks
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-semver-checks
+
+      - name: SemVer check (fed-protocol)
+        run: |
+          BASE="$(git tag --list 'septicomics-fedproto-v*' --sort=-version:refname | head -n1)"
+          if [ -n "$BASE" ]; then
+            echo "Comparing septicomics-fedproto against baseline tag: $BASE"
+            cargo semver-checks check-release --package septicomics-fedproto --baseline-rev "$BASE"
+          else
+            echo "::notice::No septicomics-fedproto release tag yet — semver baseline check is wired but skipped until the first tag."
+          fi

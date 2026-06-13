@@ -1,0 +1,9 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc d1a8f3806cbbd669d5ddc4335c839bb52f9f47591ff8f05f9823630f531f2cf9 # shrinks to result = DifferentialExpressionResult { features_tested: 1, features_significant: 0, mean_log2_fold_change: 9.715670847325425, fdr_threshold: 0.0 }
+cc 9d1a43ae3700e27ea8f279783e3842e6e96ecb1df196d4a91ccaeb3b14497e33 # shrinks to result = KaplanMeierResult { total_subjects: 1, total_events: 0, log_rank_statistic: 0.0, log_rank_pvalue: 0.0, median_survival: Some(106.15223404072485) }
+cc 0f928c5b6636ff8eee3fc3297296f6fc2e97ab8d144c67d64fccce290d45a603 # shrinks to result = DifferentialExpressionResult { features_tested: 1, features_significant: 0, mean_log2_fold_change: 0.0, fdr_threshold: 0.9359655192244837 }
