@@ -213,6 +213,7 @@ impl EstimatorVariant {
 /// Analysis plan: the complete specification for federated analysis across nodes.
 ///
 /// Combines:
+/// - **CDM and protocol versions**: which contract versions this plan requires
 /// - **cohort**: patient selection (parameterizable but not arbitrary)
 /// - **omics layers**: which data modalities to analyze (exhaustive enum from CDM)
 /// - **estimator**: which pre-approved analysis to run (not free-form code)
@@ -225,6 +226,10 @@ impl EstimatorVariant {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct AnalysisPlan {
+    /// CDM major version this plan requires (must be > 0).
+    cdm_major: u64,
+    /// Federation protocol major version this plan requires (must be > 0).
+    protocol_major: u64,
     /// Stable identifier for this analysis across federation (non-empty).
     id: String,
     /// Patient selection criteria (parameterizable but not arbitrary code).
@@ -245,6 +250,8 @@ impl AnalysisPlan {
     /// - `omics_layers` is empty
     /// - `estimator` contains empty identifier fields
     pub fn new(
+        cdm_major: u64,
+        protocol_major: u64,
         id: String,
         cohort: CohortSelector,
         omics_layers: Vec<OmicsLayer>,
@@ -257,11 +264,23 @@ impl AnalysisPlan {
         estimator.validate()?;
 
         Ok(Self {
+            cdm_major,
+            protocol_major,
             id,
             cohort,
             omics_layers,
             estimator,
         })
+    }
+
+    /// Returns the CDM major version this plan requires.
+    pub fn cdm_major(&self) -> u64 {
+        self.cdm_major
+    }
+
+    /// Returns the federation protocol major version this plan requires.
+    pub fn protocol_major(&self) -> u64 {
+        self.protocol_major
     }
 
     /// Returns the stable identifier for this analysis.
@@ -400,6 +419,8 @@ mod tests {
     #[test]
     fn analysis_plan_new_success() {
         let plan = AnalysisPlan::new(
+            1,
+            1,
             "analysis_001".to_string(),
             CohortSelector::all(),
             vec![OmicsLayer::Transcriptomics],
@@ -411,6 +432,8 @@ mod tests {
         )
         .expect("valid plan");
 
+        assert_eq!(plan.cdm_major(), 1);
+        assert_eq!(plan.protocol_major(), 1);
         assert_eq!(plan.id(), "analysis_001");
         assert!(plan.cohort().is_empty());
         assert_eq!(plan.omics_layers().len(), 1);
@@ -420,6 +443,8 @@ mod tests {
     #[test]
     fn analysis_plan_empty_layers_error() {
         let result = AnalysisPlan::new(
+            1,
+            1,
             "analysis_001".to_string(),
             CohortSelector::all(),
             vec![],
@@ -433,6 +458,8 @@ mod tests {
     #[test]
     fn analysis_plan_empty_id_error() {
         let result = AnalysisPlan::new(
+            1,
+            1,
             "   ".to_string(),
             CohortSelector::all(),
             vec![OmicsLayer::Transcriptomics],
@@ -446,6 +473,8 @@ mod tests {
     #[test]
     fn analysis_plan_invalid_estimator_error() {
         let result = AnalysisPlan::new(
+            1,
+            1,
             "analysis_001".to_string(),
             CohortSelector::all(),
             vec![OmicsLayer::Transcriptomics],
@@ -464,6 +493,8 @@ mod tests {
     #[test]
     fn analysis_plan_serde_roundtrip() {
         let plan = AnalysisPlan::new(
+            2,
+            1,
             "analysis_001".to_string(),
             CohortSelector::all(),
             vec![OmicsLayer::Transcriptomics, OmicsLayer::Proteomics],
@@ -479,6 +510,8 @@ mod tests {
         let deserialized: AnalysisPlan =
             serde_json::from_str(&json).expect("deserialization failed");
 
+        assert_eq!(plan.cdm_major(), deserialized.cdm_major());
+        assert_eq!(plan.protocol_major(), deserialized.protocol_major());
         assert_eq!(plan.id(), deserialized.id());
         assert_eq!(plan.cohort(), deserialized.cohort());
         assert_eq!(plan.omics_layers(), deserialized.omics_layers());
@@ -497,6 +530,8 @@ mod tests {
         //
         // This is enforced at compile time: only the listed variants are constructible.
         let _plan = AnalysisPlan::new(
+            1,
+            1,
             "test".to_string(),
             CohortSelector::all(),
             vec![OmicsLayer::Transcriptomics],
@@ -513,6 +548,8 @@ mod tests {
         // Verify that we can use all CDM omics layers in a plan.
         for &layer in OmicsLayer::ALL {
             let plan = AnalysisPlan::new(
+                1,
+                1,
                 "test".to_string(),
                 CohortSelector::all(),
                 vec![layer],

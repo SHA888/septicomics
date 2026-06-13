@@ -10,8 +10,12 @@ pub mod aggregate_result;
 /// Node capability advertisement: what versions and scopes each node supports.
 pub mod node_capability;
 
+/// Version negotiation: orchestrator compatibility checking against node capabilities.
+pub mod version_negotiation;
+
 pub use aggregate_result::{
     AggregateError, DifferentialExpressionResult, EndotypePrevalenceResult, KaplanMeierResult,
 };
 pub use analysis_plan::{AnalysisError, AnalysisPlan, CohortSelector, EstimatorVariant};
 pub use node_capability::{CapabilityError, ConsentScope, NodeCapability};
+pub use version_negotiation::{NegotiationError, negotiate};
