@@ -35,6 +35,9 @@ dependencies = [
 [[package]]
 name = "septicomics-cdm"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "septicomics-fedproto"

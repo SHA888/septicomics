@@ -4,4 +4,4 @@
 /// Analysis plan types and invariants.
 pub mod analysis_plan;
 
-pub use analysis_plan::AnalysisPlan;
+pub use analysis_plan::{AnalysisError, AnalysisPlan, CohortSelector, EstimatorVariant};

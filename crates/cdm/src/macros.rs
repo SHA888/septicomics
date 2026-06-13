@@ -19,7 +19,8 @@ macro_rules! wire_enum {
         }
     ) => {
         $(#[$meta])*
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ::serde::Serialize, ::serde::Deserialize)]
+        #[serde(rename_all = "snake_case")]
         $vis enum $Name {
             $( $(#[$vmeta])* $Variant, )+
         }

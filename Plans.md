@@ -42,7 +42,7 @@ The load-bearing contract every node must speak. SemVer-critical. Apache-2.0.
 
 | #   | Task | DoD | Depends | Status |
 |-----|------|-----|---------|--------|
-| 2.1 | Analysis-plan type (cohort + layer + allow-listed estimator) | free-form code unrepresentable; tests | 1.6 | cc:wip |
+| 2.1 | Analysis-plan type (cohort + layer + allow-listed estimator) | free-form code unrepresentable; tests | 1.6 | cc:done [0efe589] |
 | 2.2 | Aggregate-result type; subject-level value unrepresentable on wire | no constructor yields exportable record; property test | 2.1 | cc:todo |
 | 2.3 | Node-capability advertisement (CDM/protocol major, consent scopes) | type + serde round-trip test | 1.7 | cc:todo |
 | 2.4 | Version-negotiation (orchestrator refuses incompatible majors) | unit tests for accept/refuse | 2.3 | cc:todo |
