@@ -9,10 +9,10 @@
 
 [workspace]
 resolver = "2"
-members = ["crates/cdm"]
+members = ["crates/cdm", "crates/fed-protocol"]
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 rust-version = "1.96"
 repository = "https://github.com/septicomics/septicomics"
 authors = ["The septicomics contributors"]

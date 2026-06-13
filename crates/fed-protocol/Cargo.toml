@@ -1,0 +1,22 @@
+[package]
+name = "septicomics-fedproto"
+description = "septicomics federation protocol: analysis-plan and aggregate-result wire types. SemVer-critical contract between orchestrator and nodes."
+version = "0.1.0"
+license = "Apache-2.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+authors.workspace = true
+keywords = ["federation", "protocol", "analysis-plan"]
+categories = ["science", "data-structures"]
+
+[lints]
+workspace = true
+
+[dependencies]
+septicomics-cdm = { path = "../cdm" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
