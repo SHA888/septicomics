@@ -16,9 +16,9 @@ cd septicomics
 cargo build
 ```
 
-### 2. Install pre-commit hooks
+### 2. Install pre-commit hooks (MANDATORY)
 
-Pre-commit hooks enforce the project's engineering disciplines before each commit:
+Pre-commit hooks are **mandatory** and enforce the project's five load-bearing engineering disciplines before each commit. They cannot be bypassed.
 
 ```bash
 ./scripts/setup-hooks.sh
@@ -31,6 +31,8 @@ pip install pre-commit
 pre-commit install
 pre-commit install --hook-type commit-msg
 ```
+
+If you accidentally remove hook installation, `git commit` will fail with clear instructions to reinstall.
 
 ### 3. Install semver-checks
 
@@ -127,36 +129,58 @@ The framework enforces **five load-bearing disciplines**:
 
 ### Pre-commit hook fails on commit
 
-If a hook fails, fix the issue and re-stage. Example:
+**Hooks are mandatory and cannot be bypassed.** If a hook fails, fix the issue and re-stage:
 
 ```bash
-# cargo-fmt fails
+# Example: cargo-fmt fails
 cargo fmt
 git add -A
 git commit -m "..."
 ```
 
-### Skipping hooks (rarely needed)
+All hook failures have straightforward solutions (see below).
 
+### Common failures and fixes
+
+**`cargo-fmt` fails**: Code formatting is incorrect
 ```bash
-# Skip all hooks (not recommended)
-git commit --no-verify
-
-# Skip specific hook stages
-git commit --no-verify --hook-type commit  # Skip commit hooks
-git commit --no-verify --hook-type commit-msg  # Skip commit message hooks
+cargo fmt          # Auto-format
+git add -A
+git commit -m "..." 
 ```
 
-### Slow pre-commit runs
+**`cargo-clippy` fails**: Compiler warnings or lint issues
+```bash
+cargo clippy --fix --all-targets  # Auto-fix if possible
+# Or fix manually, then:
+git add -A
+git commit -m "..."
+```
 
-The first run of `cargo test` and semver-checks can be slow. Subsequent runs are cached:
+**`cargo-test` fails**: Tests don't pass
+```bash
+cargo test --all   # See what fails
+# Fix the bug, then:
+git add -A
+git commit -m "..."
+```
+
+**`cargo-semver-checks` fails**: Breaking change detected in CDM or fed-protocol
+This is intentional—SemVer-critical contracts cannot have breaking changes without a major version bump. See the error message for what broke.
+
+**`no-co-authored-by` fails**: Commit message has Co-Authored-By trailer
+Per CLAUDE.md, attribution stays with the human author. Remove the trailer from your commit message.
+
+**`enforce-english-plans` fails**: Plans.md has Japanese characters in status markers
+Use English markers: `cc:done` instead of `cc:完了`, `cc:wip` instead of `cc:WIP`, etc.
+
+### Performance
+
+The first run of `cargo test` and semver-checks can be slow. Subsequent runs are cached. To rebuild:
 
 ```bash
-# Rebuild incrementally (faster on repeat)
-cargo test --all
-
-# Skip cargo-test locally (not in CI)
-pre-commit run --hook-stage=commit -k 'not cargo-test'
+cargo clean && cargo test --all  # Full rebuild
+cargo test --all                 # Incremental (much faster)
 ```
 
 ## CI/CD Pipeline

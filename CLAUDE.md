@@ -16,6 +16,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     `cc:完了`, `cc:wip` instead of `cc:WIP`, etc).
   - All harness output and documentation must be in English.
   - This applies strictly to tracked files; commit to this constraint when editing `Plans.md`.
+- **Pre-commit hooks are mandatory and cannot be bypassed.** All commits must pass:
+  - `cargo fmt --check` (consistent formatting, Rust 2024 edition)
+  - `cargo clippy -D warnings` (no warnings allowed)
+  - `cargo test --all` (all tests pass)
+  - `cargo-semver-checks` on `cdm` and `fed-protocol` (no breaking changes to contracts)
+  - Invariant checks (no Co-Authored-By trailers, English-only Plans.md, no secrets)
+  
+  If a hook fails, **fix the issue—do not bypass.** See `docs/DEV_SETUP.md` for
+  troubleshooting. All failures have straightforward solutions. The hooks mirror the
+  CI pipeline exactly, so local validation prevents GitHub failures.
 
 ## Current state: scaffold only
 

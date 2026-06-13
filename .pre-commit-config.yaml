@@ -10,9 +10,21 @@
 #
 # Update hook versions:
 #   pre-commit autoupdate
+#
+# IMPORTANT: Pre-commit hooks are MANDATORY and cannot be bypassed.
+# Hooks enforce the five load-bearing engineering disciplines:
+# 1. Code quality (fmt, clippy, test)
+# 2. Contract stability (SemVer checks on critical crates)
+# 3. Load-bearing invariants (no Co-Authored-By, English-only Plans.md)
+# 4. File quality (trailing whitespace, syntax validation)
+# 5. Security (secret detection)
+#
+# If a hook fails, FIX the issue—don't bypass. All failures have easy solutions.
+# See docs/DEV_SETUP.md for troubleshooting.
 
 default_stages: [commit]
 minimum_pre_commit_version: '2.15.0'
+fail_fast: false  # Run all hooks even if one fails, so you see all issues at once
 
 repos:
   # Load hooks from .pre-commit-hooks.yaml in this repository
