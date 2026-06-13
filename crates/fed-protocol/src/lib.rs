@@ -7,7 +7,11 @@ pub mod analysis_plan;
 /// Aggregate result types: computed statistics only, never raw subject data.
 pub mod aggregate_result;
 
+/// Node capability advertisement: what versions and scopes each node supports.
+pub mod node_capability;
+
 pub use aggregate_result::{
     AggregateError, DifferentialExpressionResult, EndotypePrevalenceResult, KaplanMeierResult,
 };
 pub use analysis_plan::{AnalysisError, AnalysisPlan, CohortSelector, EstimatorVariant};
+pub use node_capability::{CapabilityError, ConsentScope, NodeCapability};
