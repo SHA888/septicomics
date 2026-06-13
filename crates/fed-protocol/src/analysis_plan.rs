@@ -6,6 +6,10 @@ use septicomics_cdm::omics::OmicsLayer;
 /// Errors that can occur when constructing or validating an analysis plan.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AnalysisError {
+    /// CDM major version is zero.
+    ZeroCdmMajor,
+    /// Protocol major version is zero.
+    ZeroProtocolMajor,
     /// Omics layers list is empty.
     EmptyOmicsLayers,
     /// Analysis plan ID is empty or whitespace-only.
@@ -30,6 +34,8 @@ pub enum AnalysisError {
 impl std::fmt::Display for AnalysisError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            AnalysisError::ZeroCdmMajor => write!(f, "CDM major version must be > 0"),
+            AnalysisError::ZeroProtocolMajor => write!(f, "protocol major version must be > 0"),
             AnalysisError::EmptyOmicsLayers => write!(f, "omics layers list must not be empty"),
             AnalysisError::EmptyPlanId => {
                 write!(f, "analysis plan ID must not be empty or whitespace")
@@ -223,7 +229,7 @@ impl EstimatorVariant {
 ///
 /// All string fields are validated at construction to reject empty or whitespace-only values,
 /// enforcing the parse-don't-validate discipline.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct AnalysisPlan {
     /// CDM major version this plan requires (must be > 0).
@@ -246,6 +252,8 @@ impl AnalysisPlan {
     /// # Errors
     ///
     /// Returns [`AnalysisError`] if:
+    /// - `cdm_major` is zero
+    /// - `protocol_major` is zero
     /// - `id` is empty or whitespace-only
     /// - `omics_layers` is empty
     /// - `estimator` contains empty identifier fields
@@ -257,6 +265,12 @@ impl AnalysisPlan {
         omics_layers: Vec<OmicsLayer>,
         estimator: EstimatorVariant,
     ) -> Result<Self, AnalysisError> {
+        if cdm_major == 0 {
+            return Err(AnalysisError::ZeroCdmMajor);
+        }
+        if protocol_major == 0 {
+            return Err(AnalysisError::ZeroProtocolMajor);
+        }
         validate_nonempty(&id, "plan_id")?;
         if omics_layers.is_empty() {
             return Err(AnalysisError::EmptyOmicsLayers);
@@ -301,6 +315,35 @@ impl AnalysisPlan {
     /// Returns the estimator to apply.
     pub fn estimator(&self) -> &EstimatorVariant {
         &self.estimator
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for AnalysisPlan {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "snake_case")]
+        struct Raw {
+            cdm_major: u64,
+            protocol_major: u64,
+            id: String,
+            cohort: CohortSelector,
+            omics_layers: Vec<OmicsLayer>,
+            estimator: EstimatorVariant,
+        }
+
+        let raw = Raw::deserialize(deserializer)?;
+        Self::new(
+            raw.cdm_major,
+            raw.protocol_major,
+            raw.id,
+            raw.cohort,
+            raw.omics_layers,
+            raw.estimator,
+        )
+        .map_err(serde::de::Error::custom)
     }
 }
 
@@ -559,5 +602,55 @@ mod tests {
             );
             assert!(plan.is_ok(), "layer {:?} should be valid", layer);
         }
+    }
+
+    #[test]
+    fn rejects_zero_cdm_major() {
+        let result = AnalysisPlan::new(
+            0,
+            1,
+            "test".to_string(),
+            CohortSelector::all(),
+            vec![OmicsLayer::Transcriptomics],
+            EstimatorVariant::EndotypePrevalence {
+                endotype: "test".to_string(),
+            },
+        );
+        assert!(matches!(result, Err(AnalysisError::ZeroCdmMajor)));
+    }
+
+    #[test]
+    fn rejects_zero_protocol_major() {
+        let result = AnalysisPlan::new(
+            1,
+            0,
+            "test".to_string(),
+            CohortSelector::all(),
+            vec![OmicsLayer::Transcriptomics],
+            EstimatorVariant::EndotypePrevalence {
+                endotype: "test".to_string(),
+            },
+        );
+        assert!(matches!(result, Err(AnalysisError::ZeroProtocolMajor)));
+    }
+
+    #[test]
+    fn deserialization_enforces_zero_cdm_major() {
+        let invalid_json = r#"{"cdm_major": 0, "protocol_major": 1, "id": "test", "cohort": {"filters": {}}, "omics_layers": ["transcriptomics"], "estimator": {"estimator": "endotype_prevalence", "params": {"endotype": "test"}}}"#;
+        let result: Result<AnalysisPlan, _> = serde_json::from_str(invalid_json);
+        assert!(
+            result.is_err(),
+            "deserialization should reject zero CDM major"
+        );
+    }
+
+    #[test]
+    fn deserialization_enforces_zero_protocol_major() {
+        let invalid_json = r#"{"cdm_major": 1, "protocol_major": 0, "id": "test", "cohort": {"filters": {}}, "omics_layers": ["transcriptomics"], "estimator": {"estimator": "endotype_prevalence", "params": {"endotype": "test"}}}"#;
+        let result: Result<AnalysisPlan, _> = serde_json::from_str(invalid_json);
+        assert!(
+            result.is_err(),
+            "deserialization should reject zero protocol major"
+        );
     }
 }
