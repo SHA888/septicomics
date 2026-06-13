@@ -1,0 +1,33 @@
+# Pre-commit configuration for septicomics developers
+# https://pre-commit.com/
+#
+# Setup:
+#   pip install pre-commit
+#   cd septicomics && pre-commit install
+#
+# Run manually:
+#   pre-commit run --all-files
+#
+# Update hook versions:
+#   pre-commit autoupdate
+
+default_stages: [commit]
+minimum_pre_commit_version: '2.15.0'
+
+repos:
+  # Load hooks from .pre-commit-hooks.yaml in this repository
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+      - id: cargo-clippy
+      - id: cargo-test
+      - id: cargo-semver-checks-cdm
+      - id: cargo-semver-checks-fedproto
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: no-co-authored-by
+      - id: enforce-english-plans

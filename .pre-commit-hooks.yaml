@@ -1,0 +1,107 @@
+# Pre-commit hooks for septicomics federation protocol
+# https://pre-commit.com/
+#
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+# Update: pre-commit autoupdate
+
+repos:
+  # Rust code quality gates
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        description: Format Rust code
+        entry: cargo fmt --
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [commit]
+
+      - id: cargo-clippy
+        name: cargo clippy
+        description: Lint Rust code
+        entry: cargo clippy --all-targets --all-features -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [commit]
+
+      - id: cargo-test
+        name: cargo test
+        description: Run Rust tests
+        entry: cargo test --all
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [commit]
+
+      - id: cargo-semver-checks-cdm
+        name: cargo-semver-checks (cdm)
+        description: Check SemVer compliance for CDM contract
+        entry: cargo-semver-checks -p septicomics-cdm
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [commit]
+        always_run: true
+
+      - id: cargo-semver-checks-fedproto
+        name: cargo-semver-checks (fed-protocol)
+        description: Check SemVer compliance for federation protocol contract
+        entry: cargo-semver-checks -p septicomics-fedproto
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [commit]
+        always_run: true
+
+  # Git quality gates
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+        stages: [commit]
+
+      - id: end-of-file-fixer
+        name: Fix end of file
+        stages: [commit]
+
+      - id: check-yaml
+        name: Check YAML
+        args: [--unsafe]
+        stages: [commit]
+
+      - id: check-toml
+        name: Check TOML
+        stages: [commit]
+
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+        stages: [commit]
+
+      - id: detect-private-key
+        name: Detect private keys
+        stages: [commit]
+
+  # Enforce load-bearing invariants
+  - repo: local
+    hooks:
+      - id: no-co-authored-by
+        name: No Co-Authored-By trailers
+        description: Per CLAUDE.md, commit attribution stays with human author
+        entry: bash -c 'grep -E "^Co-Authored-By:" "$@" && exit 1 || exit 0'
+        language: system
+        files: '^$'  # Never matches (metadata hook)
+        pass_filenames: false
+        always_run: true
+        stages: [commit-msg]
+
+      - id: enforce-english-plans
+        name: Plans.md must be English-only
+        description: No Japanese characters in status markers (cc:done not cc:完了)
+        entry: bash -c 'grep -E "[ぁ-ん]|[ァ-ヴー]|[一-龥]" Plans.md && exit 1 || exit 0'
+        language: system
+        files: 'Plans\.md$'
+        stages: [commit]
