@@ -49,10 +49,21 @@ impl ConsentScope {
     /// # Errors
     ///
     /// Returns [`CapabilityError::EmptyConsentScope`] if the scope is empty or whitespace-only.
+    /// The error's `index` field defaults to 0; use [`Self::new_at_index`] to set a custom index.
     pub fn new(scope: impl Into<String>) -> Result<Self, CapabilityError> {
+        Self::new_at_index(scope, 0)
+    }
+
+    /// Creates a new consent scope with an explicit index for error reporting.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CapabilityError::EmptyConsentScope`] if the scope is empty or whitespace-only.
+    /// The error's `index` field is set to the provided `index` parameter.
+    pub fn new_at_index(scope: impl Into<String>, index: usize) -> Result<Self, CapabilityError> {
         let scope = scope.into();
         if scope.trim().is_empty() {
-            return Err(CapabilityError::EmptyConsentScope { index: 0 });
+            return Err(CapabilityError::EmptyConsentScope { index });
         }
         Ok(ConsentScope(scope))
     }
@@ -83,6 +94,9 @@ impl From<ConsentScope> for String {
 /// - CDM major version must match the plan's CDM version
 /// - Protocol major version must match the plan's protocol version
 /// - Node must support all consent scopes required by the plan
+///
+/// Note: Duplicate scopes in the input list are silently deduplicated by `BTreeSet`.
+/// If this is unexpected, the caller should validate the input before calling `new()`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct NodeCapability {
@@ -90,7 +104,7 @@ pub struct NodeCapability {
     pub cdm_major: u64,
     /// Federation protocol major version this node speaks (must be > 0).
     pub protocol_major: u64,
-    /// Consent scopes this node can handle (must be non-empty).
+    /// Consent scopes this node can handle (must be non-empty, duplicates are deduplicated).
     pub consent_scopes: BTreeSet<ConsentScope>,
 }
 
@@ -121,10 +135,7 @@ impl NodeCapability {
 
         let mut scopes = BTreeSet::new();
         for (idx, scope) in consent_scopes.iter().enumerate() {
-            if scope.trim().is_empty() {
-                return Err(CapabilityError::EmptyConsentScope { index: idx });
-            }
-            scopes.insert(ConsentScope::new(scope.clone())?);
+            scopes.insert(ConsentScope::new_at_index(scope.clone(), idx)?);
         }
 
         Ok(Self {
